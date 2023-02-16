@@ -23,15 +23,12 @@ RUN apk update && \
     fi && \
     rm -rf /tmp/* && \
     apk --purge del .build-deps && \
-    adduser \
-        --disabled-password \
-        --no-create-home \
-        django-user && \
     mkdir -p /vol/web/media && \
     mkdir -p /vol/web/static && \
-    chown -R django-user:django-user /vol && \
-    chmod -R 755 /vol
+    chown -R root:users /vol && \
+    chown -R root /app && \
+    chmod -R 755 /vol && \
+    chmod -R 777 /app
 
 ENV PATH="/py/bin:$PATH"
-
-USER django-user
+USER root
