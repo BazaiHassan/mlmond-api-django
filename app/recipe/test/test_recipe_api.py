@@ -27,12 +27,12 @@ def detail_url(recipe_id):
 
 def image_upload_url(recipe_id):
     """ Create and Return a recipe detail URL """
-    return reverse('recipe:recipe-detail', args=[recipe_id])
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 def create_recipe(user, **params):
     """ Create and Return a sample recipe. """
     defaults = {
-        'title':'',
+        'title':'Sample recipe title',
         'time_minutes':22,
         'price':Decimal('5.25'),
         'description':'Sample Description',
@@ -87,7 +87,7 @@ class PrivateRecipeAPITest(TestCase):
 
         res = self.client.get(RECIPES_URL)
 
-        recipes = Recipe.objects.all().filter(user=self.user)
+        recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many = True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
