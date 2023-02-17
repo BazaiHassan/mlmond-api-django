@@ -5,15 +5,16 @@ ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt /tmp/
 COPY requirements.dev.txt /tmp/
+COPY ./scripts /scripts
 COPY app /app/
 WORKDIR /app
 EXPOSE 8000
 
-ARG DEV=true
+ARG DEV=false
 RUN rm -rf /var/cache/apk/*
 RUN apk update && \
     apk add --no-cache --virtual .build-deps \
-        build-base postgresql-dev musl-dev zlib-dev jpeg-dev && \
+        build-base postgresql-dev musl-dev zlib-dev linux-headers jpeg-dev && \
     apk add --no-cache postgresql-client postgresql-dev jpeg && \
     python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
@@ -28,7 +29,10 @@ RUN apk update && \
     chown -R root:users /vol && \
     chown -R root /app && \
     chmod -R 755 /vol && \
-    chmod -R 777 /app
+    chmod -R 777 /app && \
+    chmod -R +x /scripts
 
-ENV PATH="/py/bin:$PATH"
+ENV PATH="/scripts:/py/bin:$PATH"
 USER root
+
+CMD [ "run.sh" ]
