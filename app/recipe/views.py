@@ -63,7 +63,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """ Return the serializer class for the request """
-        if self.action == 'list':
+        if self.action == 'list' and not self.request.user.is_authenticated:
             return serializers.RecipeSerializer
         elif self.action == 'upload_image':
             return serializers.RecipeImageSerializer

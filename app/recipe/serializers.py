@@ -6,6 +6,14 @@ from rest_framework import serializers
 
 from core.models import Recipe, Tag, Ingredient
 
+class RecipeImageSerializer(serializers.ModelSerializer):
+    """ Serializer to uploading image to the recipe """
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image':{'required':'True'}}
 
 class IngredientSerializer(serializers.ModelSerializer):
     """ serializer for ingredient """
@@ -27,9 +35,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     """ serializer for recipes """
     tags = TagSerializer(many = True, required = False)
     ingredients = IngredientSerializer(many = True, required=False)
+    images = RecipeImageSerializer(many=True, required=True)
     class Meta:
         model = Recipe
-        fields = ['id','title','time_minutes','price','link','tags','ingredients']
+        fields = ['id','title','time_minutes','price','link','tags','ingredients','images']
         read_only_fields = ['id']
 
 
@@ -86,13 +95,3 @@ class RecipeDetailSerializer(RecipeSerializer):
     
     class Meta(RecipeSerializer.Meta):
         fields = RecipeSerializer.Meta.fields + ['description']
-
-
-class RecipeImageSerializer(serializers.ModelSerializer):
-    """ Serializer to uploading image to the recipe """
-
-    class Meta:
-        model = Recipe
-        fields = ['id', 'image']
-        read_only_fields = ['id']
-        extra_kwargs = {'image':{'required':'True'}}
