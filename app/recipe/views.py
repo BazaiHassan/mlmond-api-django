@@ -12,7 +12,7 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from core.models import Recipe, Tag, Ingredient
 from recipe import serializers
@@ -38,7 +38,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RecipeDetailSerializer
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication]
-    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
 
     def _params_to_ints(self, qs):
         """ Convert a list of strings to integers """
@@ -56,15 +55,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ingredient_ids = self._params_to_ints(ingredients)
             queryset = queryset.filter(ingredients__id__in=ingredient_ids)
         
+        if self.request.method == 'GET':
+            return queryset.order_by('-id').distinct()
+        
         return queryset.filter(
-            user = self.request.user
+            user=self.request.user
         ).order_by('-id').distinct()
-
 
     def get_serializer_class(self):
         """ Return the serializer class for the request """
-        if self.action == 'list':
-            return serializers.RecipeSerializer
+        if self.action in ['list', 'retrieve']:
+            return serializers.RecipeDetailSerializer
         elif self.action == 'upload_image':
             return serializers.RecipeImageSerializer
         
@@ -72,19 +73,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """ Create a new recipe """
-        serializer.save(user = self.request.user)
+        serializer.save(user=self.request.user)
 
     @action(methods=['POST'], detail=True, url_path='upload-image')
     def upload_image(self, request, pk=None):
         """ Upload an image to recipe """
         recipe = self.get_object()
-        serializer = self.get_serializer(recipe, data = request.data)
+        serializer = self.get_serializer(recipe, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_permissions(self):
+        """ Return permissions based on request method """
+        if self.request.method == 'GET':
+            return []
+        return [IsAuthenticated()]
+
 @extend_schema_view(
     list=extend_schema(
         parameters=[

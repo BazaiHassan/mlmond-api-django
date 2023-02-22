@@ -35,10 +35,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     """ serializer for recipes """
     tags = TagSerializer(many = True, required = False)
     ingredients = IngredientSerializer(many = True, required=False)
-    images = RecipeImageSerializer(many=True, required=True)
+    image = serializers.ImageField(max_length=None, use_url=True)
     class Meta:
         model = Recipe
-        fields = ['id','title','time_minutes','price','link','tags','ingredients','images']
+        fields = ['id','title','time_minutes','price','link','tags','ingredients']
         read_only_fields = ['id']
 
 
@@ -94,4 +94,4 @@ class RecipeDetailSerializer(RecipeSerializer):
     """ Serializer for recipe detail view """
     
     class Meta(RecipeSerializer.Meta):
-        fields = RecipeSerializer.Meta.fields + ['description']
+        fields = RecipeSerializer.Meta.fields + ['description','image']
