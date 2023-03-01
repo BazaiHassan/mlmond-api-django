@@ -18,8 +18,6 @@ router.register('tags', views.TagViewSet)
 
 router.register('ingredients', views.IngredientViewSet)
 
-''' Url for bannerImage '''
-router.register('bannerImages',views.BannerImageViewSet)
 
 app_name = 'recipe'
 
