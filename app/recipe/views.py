@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
-from core.models import Recipe, Tag, Ingredient, BannerImage
+from core.models import Recipe, Tag, Ingredient
 from recipe import serializers
 
 @extend_schema_view(
