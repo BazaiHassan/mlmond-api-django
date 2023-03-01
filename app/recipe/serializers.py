@@ -101,4 +101,4 @@ class RecipeDetailSerializer(RecipeSerializer):
 class BannerImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BannerImage
-        fields = ('id', 'image', 'uploaded_at')
+        fields = ('id', 'banner_image', 'uploaded_at')
