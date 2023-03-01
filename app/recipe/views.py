@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
-from core.models import Recipe, Tag, Ingredient
+from core.models import Recipe, Tag, Ingredient, BannerImage
 from recipe import serializers
 
 @extend_schema_view(
@@ -159,4 +159,16 @@ class IngredientViewSet(
             queryset = queryset.filter(recipe__isnull=False)
         return queryset.filter(user = self.request.user).order_by('-name').distinct()
 
-    
+
+''' This code is for the banner image API '''
+class BannerImageViewSet(viewsets.ModelViewSet):
+    queryset = BannerImage.objects.all()
+    serializer_class = serializers.BannerImageSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data = request.data)
+        serializer.is_valid(raise_exception=True)
+        banner_image = serializer.save()
+        # Construct the absolute URL for the image file
+        banner_image_url = request.build_absolute_uri(banner_image.banner_image.url)
+        return Response({'banner_image_url': banner_image_url})

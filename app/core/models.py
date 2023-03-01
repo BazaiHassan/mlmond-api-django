@@ -86,3 +86,12 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+''' This code is for the banner image API '''
+class BannerImage(models.Model):
+    banner_image = models.ImageField(upload_to=recipe_image_file_path)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.banner_image.name

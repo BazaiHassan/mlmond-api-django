@@ -4,17 +4,16 @@ Serializer for recipe APIs
 
 from rest_framework import serializers
 
-from core.models import Recipe, Tag, Ingredient
+from core.models import Recipe, Tag, Ingredient, BannerImage
 
 class RecipeImageSerializer(serializers.ModelSerializer):
     """ Serializer to uploading image to the recipe """
 
     class Meta:
         model = Recipe
-        # fields = ['id', 'image']
-        fields = ['image']
-        # read_only_fields = ['id']
-        # extra_kwargs = {'image':{'required':'True'}}
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image':{'required':'True'}}
 
 class IngredientSerializer(serializers.ModelSerializer):
     """ serializer for ingredient """
@@ -96,3 +95,10 @@ class RecipeDetailSerializer(RecipeSerializer):
     
     class Meta(RecipeSerializer.Meta):
         fields = RecipeSerializer.Meta.fields + ['description','image']
+
+
+''' This code is for the banner image API '''
+class BannerImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BannerImage
+        fields = ('id', 'image', 'uploaded_at')
