@@ -1,5 +1,5 @@
 """
-URL mapping for the recipe app
+URL mapping for the dataset app
 """
 
 from django.urls import (
@@ -9,17 +9,17 @@ from django.urls import (
 
 from rest_framework.routers import DefaultRouter
 
-from recipe import views
+from dataset import views
 
 router = DefaultRouter()
-router.register('recipes', views.RecipeViewSet)
+router.register('datasets', views.DatasetViewSet)
 
 router.register('tags', views.TagViewSet)
 
 router.register('ingredients', views.IngredientViewSet)
 
 
-app_name = 'recipe'
+app_name = 'dataset'
 
 urlpatterns = [
     path('', include(router.urls)),

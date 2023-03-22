@@ -1,5 +1,5 @@
 """
-Views for the recipes API
+Views for the datasets API
 """
 from drf_spectacular.utils import (
     extend_schema_view,
@@ -14,8 +14,8 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
-from core.models import Recipe, Tag, Ingredient
-from recipe import serializers
+from core.models import Dataset, Tag, Ingredient
+from dataset import serializers
 
 @extend_schema_view(
     list = extend_schema(
@@ -33,10 +33,10 @@ from recipe import serializers
         ]
     )
 )
-class RecipeViewSet(viewsets.ModelViewSet):
-    """ View for manage recipe APIs """
-    serializer_class = serializers.RecipeDetailSerializer
-    queryset = Recipe.objects.all()
+class DatasetViewSet(viewsets.ModelViewSet):
+    """ View for manage dataset APIs """
+    serializer_class = serializers.DatasetDetailSerializer
+    queryset = Dataset.objects.all()
     authentication_classes = [TokenAuthentication]
 
     def _params_to_ints(self, qs):
@@ -44,7 +44,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return [int(str_id) for str_id in qs.split(',')]
 
     def get_queryset(self):
-        """ Retrieve recipes for authenticated users """
+        """ Retrieve datasets for authenticated users """
         tags = self.request.query_params.get('tags')
         ingredients = self.request.query_params.get('ingredients')
         queryset = self.queryset
@@ -65,21 +65,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """ Return the serializer class for the request """
         if self.action in ['list', 'retrieve']:
-            return serializers.RecipeDetailSerializer
+            return serializers.DatasetDetailSerializer
         elif self.action == 'upload_image':
-            return serializers.RecipeImageSerializer
+            return serializers.DatasetImageSerializer
         
         return self.serializer_class
 
     def perform_create(self, serializer):
-        """ Create a new recipe """
+        """ Create a new dataset """
         serializer.save(user=self.request.user)
 
     @action(methods=['POST'], detail=True, url_path='upload-image')
     def upload_image(self, request, pk=None):
-        """ Upload an image to recipe """
-        recipe = self.get_object()
-        serializer = self.get_serializer(recipe, data=request.data)
+        """ Upload an image to dataset """
+        dataset = self.get_object()
+        serializer = self.get_serializer(dataset, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -99,7 +99,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             OpenApiParameter(
                 'assigned_only',
                 OpenApiTypes.INT, enum=[0, 1],
-                description='Filter by items assigned to recipe'
+                description='Filter by items assigned to dataset'
             )
         ]
     )
@@ -123,7 +123,7 @@ class TagViewSet(
         )
         queryset = self.queryset
         if assigned_only:
-            queryset = queryset.filter(recipe__isnull=False)
+            queryset = queryset.filter(dataset__isnull=False)
         return queryset.filter(user = self.request.user).order_by('-name').distinct()
 
 @extend_schema_view(
@@ -132,7 +132,7 @@ class TagViewSet(
             OpenApiParameter(
                 'assigned_only',
                 OpenApiTypes.INT, enum=[0, 1],
-                description='Filter by items assigned to recipe'
+                description='Filter by items assigned to dataset'
             )
         ]
     )
@@ -156,5 +156,5 @@ class IngredientViewSet(
         )
         queryset = self.queryset
         if assigned_only:
-            queryset = queryset.filter(recipe__isnull=False)
+            queryset = queryset.filter(dataset__isnull=False)
         return queryset.filter(user = self.request.user).order_by('-name').distinct()

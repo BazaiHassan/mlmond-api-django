@@ -1,5 +1,5 @@
 """
-Test for recipe APIs.
+Test for dataset APIs.
 """
 
 from decimal import Decimal
@@ -15,40 +15,40 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe, Tag, Ingredient
+from core.models import Dataset, Tag, Ingredient
 
-from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
+from dataset.serializers import DatasetSerializer, DatasetDetailSerializer
 
-RECIPES_URL = reverse('recipe:recipe-list')
+RECIPES_URL = reverse('dataset:dataset-list')
 
-def detail_url(recipe_id):
-    """ Create and return a recipe detail UTL  """
-    return reverse('recipe:recipe-detail', args=[recipe_id])
+def detail_url(dataset_id):
+    """ Create and return a dataset detail UTL  """
+    return reverse('dataset:dataset-detail', args=[dataset_id])
 
-def image_upload_url(recipe_id):
-    """ Create and Return a recipe detail URL """
-    return reverse('recipe:recipe-upload-image', args=[recipe_id])
+def image_upload_url(dataset_id):
+    """ Create and Return a dataset detail URL """
+    return reverse('dataset:dataset-upload-image', args=[dataset_id])
 
-def create_recipe(user, **params):
-    """ Create and Return a sample recipe. """
+def create_dataset(user, **params):
+    """ Create and Return a sample dataset. """
     defaults = {
-        'title':'Sample recipe title',
+        'title':'Sample dataset title',
         'time_minutes':22,
         'price':Decimal('5.25'),
         'description':'Sample Description',
-        'link':'http://example.com/recipe.pdf'
+        'link':'http://example.com/dataset.pdf'
     }
 
     defaults.update(params)
-    recipe = Recipe.objects.create(user=user, **defaults)
-    return recipe
+    dataset = Dataset.objects.create(user=user, **defaults)
+    return dataset
 
 
 def create_user(**params):
     """ Create and Return a new user """
     return get_user_model().objects.create_user(**params)
 
-class PublicRecipeAPITest(TestCase):
+class PublicDatasetAPITest(TestCase):
     """ Test unauthenticated API requests """
     def setUp(self):
         self.client = APIClient()
@@ -60,53 +60,53 @@ class PublicRecipeAPITest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateRecipeAPITest(TestCase):
+class PrivateDatasetAPITest(TestCase):
     """ Test authenticated API requests """
     def setUp(self):
         self.client = APIClient()
         self.user = create_user(email = 'user@example.com', password = 'testpass123')
         self.client.force_authenticate(self.user)
 
-    def test_retrieve_recipes(self):
-        """ Test retrieve a list of recipes """
-        create_recipe(user=self.user)
-        create_recipe(user=self.user)
+    def test_retrieve_datasets(self):
+        """ Test retrieve a list of datasets """
+        create_dataset(user=self.user)
+        create_dataset(user=self.user)
 
         res = self.client.get(RECIPES_URL)
 
-        recipes = Recipe.objects.all().order_by('-id')
-        serializer = RecipeSerializer(recipes, many = True)
+        datasets = Dataset.objects.all().order_by('-id')
+        serializer = DatasetSerializer(datasets, many = True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_recipe_list_limited_to_user(self):
-        """ Test list of recipes is limited to authenticated user """
+    def test_dataset_list_limited_to_user(self):
+        """ Test list of datasets is limited to authenticated user """
         other_user = create_user(email = 'other@example.com', password = 'testpass123')
-        create_recipe(user=other_user)
-        create_recipe(user=self.user)
+        create_dataset(user=other_user)
+        create_dataset(user=self.user)
 
         res = self.client.get(RECIPES_URL)
 
-        recipes = Recipe.objects.filter(user=self.user)
-        serializer = RecipeSerializer(recipes, many = True)
+        datasets = Dataset.objects.filter(user=self.user)
+        serializer = DatasetSerializer(datasets, many = True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_get_recipe_detail(self):
-        """ Test get recipe detail """
-        recipe = create_recipe(user=self.user)
+    def test_get_dataset_detail(self):
+        """ Test get dataset detail """
+        dataset = create_dataset(user=self.user)
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.get(url)
 
-        serializer = RecipeDetailSerializer(recipe)
+        serializer = DatasetDetailSerializer(dataset)
         self.assertEqual(res.data, serializer.data)
 
 
-    def test_create_recipe(self):
-        """ Test creating a recipe """
+    def test_create_dataset(self):
+        """ Test creating a dataset """
         payload = {
-            'title':'Sample Recipe',
+            'title':'Sample Dataset',
             'time_minutes':30,
             'price':Decimal('5.99'),
         }
@@ -114,96 +114,96 @@ class PrivateRecipeAPITest(TestCase):
         res = self.client.post(RECIPES_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        recipe = Recipe.objects.get(id = res.data['id'])
+        dataset = Dataset.objects.get(id = res.data['id'])
         for k, v in payload.items():
-            self.assertEqual(getattr(recipe, k), v)
-        self.assertEqual(recipe.user, self.user)
+            self.assertEqual(getattr(dataset, k), v)
+        self.assertEqual(dataset.user, self.user)
 
 
     def test_partial_update(self):
-        """ Test partial update of a recipe """
-        original_link = 'https://example.com/recipe.pdf'
-        recipe = create_recipe(
+        """ Test partial update of a dataset """
+        original_link = 'https://example.com/dataset.pdf'
+        dataset = create_dataset(
             user=self.user,
-            title = 'Sample Recipe Title',
+            title = 'Sample Dataset Title',
             link = original_link
         )
 
-        payload = {'title':'New Recipe Title'}
+        payload = {'title':'New Dataset Title'}
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        recipe.refresh_from_db()
-        self.assertEqual(recipe.title, payload['title'])
-        self.assertEqual(recipe.link, original_link)
-        self.assertEqual(recipe.user, self.user)
+        dataset.refresh_from_db()
+        self.assertEqual(dataset.title, payload['title'])
+        self.assertEqual(dataset.link, original_link)
+        self.assertEqual(dataset.user, self.user)
 
     def test_full_update(self):
-        """ Test full update of recipe """
-        recipe = create_recipe(
+        """ Test full update of dataset """
+        dataset = create_dataset(
             user=self.user,
-            title = 'Sample Recipe Title',
-            link = 'https://example.com/recipe.pdf',
-            description = 'Sample recipe description'
+            title = 'Sample Dataset Title',
+            link = 'https://example.com/dataset.pdf',
+            description = 'Sample dataset description'
         )
 
         payload = {
-            'title':'New Recipe Title',
-            'link':'https://example.com/new_recipe.pdf',
-            'description':'new recipe description',
+            'title':'New Dataset Title',
+            'link':'https://example.com/new_dataset.pdf',
+            'description':'new dataset description',
             'time_minutes':10,
             'price':Decimal('2.50')
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.put(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        recipe.refresh_from_db()
+        dataset.refresh_from_db()
         for k, v in payload.items():
-            self.assertEqual(getattr(recipe, k),v)
-        self.assertEqual(recipe.user, self.user)
+            self.assertEqual(getattr(dataset, k),v)
+        self.assertEqual(dataset.user, self.user)
 
     def test_update_user_returns_error(self):
-        """ Test changing the recipe user results in an error """
+        """ Test changing the dataset user results in an error """
         new_user = create_user(email='user2@example.com', password = 'test123')
-        recipe = create_recipe(user=self.user)
+        dataset = create_dataset(user=self.user)
 
         payload = {
             'user':new_user.id
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         self.client.patch(url, payload)
 
-        recipe.refresh_from_db()
-        self.assertEqual(recipe.user, self.user)
+        dataset.refresh_from_db()
+        self.assertEqual(dataset.user, self.user)
 
-    def test_delete_recipe(self):
-        """ test deleting a recipe successful """
-        recipe = create_recipe(user=self.user)
+    def test_delete_dataset(self):
+        """ test deleting a dataset successful """
+        dataset = create_dataset(user=self.user)
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.delete(url)
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+        self.assertFalse(Dataset.objects.filter(id=dataset.id).exists())
 
-    def test_delete_other_user_recipe_error(self):
-        """ Test trying to delete other users recipe gives error """
+    def test_delete_other_user_dataset_error(self):
+        """ Test trying to delete other users dataset gives error """
         new_user = create_user(email='user2@example.com', password = 'test123')
-        recipe = create_recipe(user=new_user)
+        dataset = create_dataset(user=new_user)
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.delete(url)
 
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertTrue(Recipe.objects.filter(id = recipe.id).exists())
+        self.assertTrue(Dataset.objects.filter(id = dataset.id).exists())
 
-    def test_create_recipe_with_new_tags(self):
-        """ Test creating a recipe with new tags """
+    def test_create_dataset_with_new_tags(self):
+        """ Test creating a dataset with new tags """
         payload = {
             'title':'Thai prawn Curry',
             'time_minutes':10,
@@ -213,19 +213,19 @@ class PrivateRecipeAPITest(TestCase):
 
         res = self.client.post(RECIPES_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        recipes = Recipe.objects.filter(user=self.user)
-        self.assertEqual(recipes.count(),1)
-        recipe = recipes[0]
-        self.assertEqual(recipe.tags.count(), 2)
+        datasets = Dataset.objects.filter(user=self.user)
+        self.assertEqual(datasets.count(),1)
+        dataset = datasets[0]
+        self.assertEqual(dataset.tags.count(), 2)
         for tag in payload['tags']:
-            exists = recipe.tags.filter(
+            exists = dataset.tags.filter(
                 name = tag['name'],
                 user = self.user,
             ).exists()
             self.assertTrue(exists)
 
-    def test_creating_recipe_with_existing_tags(self):
-        """ Test creating a recipe with existing tag """
+    def test_creating_dataset_with_existing_tags(self):
+        """ Test creating a dataset with existing tag """
         tag_indian = Tag.objects.create(user = self.user, name = 'Indian')
         payload = {
             'title':'Pongal',
@@ -236,21 +236,21 @@ class PrivateRecipeAPITest(TestCase):
 
         res =  self.client.post(RECIPES_URL, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        recipes = Recipe.objects.filter(user=self.user)
-        self.assertEqual(recipes.count(),1)
-        recipe = recipes[0]
-        self.assertEqual(recipe.tags.count(), 2)
-        self.assertIn(tag_indian, recipe.tags.all())
+        datasets = Dataset.objects.filter(user=self.user)
+        self.assertEqual(datasets.count(),1)
+        dataset = datasets[0]
+        self.assertEqual(dataset.tags.count(), 2)
+        self.assertIn(tag_indian, dataset.tags.all())
         for tag in payload['tags']:
-            exists = recipe.tags.filter(
+            exists = dataset.tags.filter(
                 name = tag['name'],
                 user = self.user,
             ).exists()
             self.assertTrue(exists)
 
     def test_create_tag_on_update(self):
-        """ Test creating tag when updating a recipe """
-        recipe = create_recipe(user=self.user)
+        """ Test creating tag when updating a dataset """
+        dataset = create_dataset(user=self.user)
 
         payload = {
             'tags':[
@@ -260,18 +260,18 @@ class PrivateRecipeAPITest(TestCase):
             ]
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         new_tag = Tag.objects.get(user = self.user, name = 'Lunch')
-        self.assertIn(new_tag, recipe.tags.all())
+        self.assertIn(new_tag, dataset.tags.all())
 
-    def test_update_recipe_assign_tag(self):
-        """ Test assigning an existing tag when updating a recipe """
+    def test_update_dataset_assign_tag(self):
+        """ Test assigning an existing tag when updating a dataset """
         tag_breakfast = Tag.objects.create(user = self.user, name='Breakfast')
-        recipe = create_recipe(user = self.user)
-        recipe.tags.add(tag_breakfast)
+        dataset = create_dataset(user = self.user)
+        dataset.tags.add(tag_breakfast)
 
         tag_lunch = Tag.objects.create(user = self.user, name='Lunch')
         payload = {
@@ -282,27 +282,27 @@ class PrivateRecipeAPITest(TestCase):
             ]
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')    
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertIn(tag_lunch, recipe.tags.all())
-        self.assertNotIn(tag_breakfast, recipe.tags.all())
+        self.assertIn(tag_lunch, dataset.tags.all())
+        self.assertNotIn(tag_breakfast, dataset.tags.all())
 
-    def test_clear_recipe_tags(self):
-        """ Test clearing a recipe tag """
+    def test_clear_dataset_tags(self):
+        """ Test clearing a dataset tag """
         tag = Tag.objects.create(user = self.user, name = 'Dessert')
-        recipe = create_recipe(user = self.user)
-        recipe.tags.add(tag)
+        dataset = create_dataset(user = self.user)
+        dataset.tags.add(tag)
 
         payload = {'tags':[]}
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(recipe.tags.count(), 0)
+        self.assertEqual(dataset.tags.count(), 0)
 
-    def test_creating_recipe_with_new_ingredient(self):
-        """ Test creating a recipe with new ingredient """
+    def test_creating_dataset_with_new_ingredient(self):
+        """ Test creating a dataset with new ingredient """
         payload = {
             'title':'Caulifalower Taco',
             'time_minutes':60,
@@ -312,21 +312,21 @@ class PrivateRecipeAPITest(TestCase):
         res =  self.client.post(RECIPES_URL, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        recipes = Recipe.objects.filter(user=self.user)
-        self.assertEqual(recipes.count(),1)
-        recipe = recipes[0]
-        self.assertEqual(recipe.ingredients.count(), 2)
+        datasets = Dataset.objects.filter(user=self.user)
+        self.assertEqual(datasets.count(),1)
+        dataset = datasets[0]
+        self.assertEqual(dataset.ingredients.count(), 2)
         
         for ingredient in payload['ingredients']:
-            exists = recipe.ingredients.filter(
+            exists = dataset.ingredients.filter(
                 name = ingredient['name'],
                 user = self.user,
             ).exists()
             self.assertTrue(exists)
 
 
-    def test_creating_recipe_with_existing_ingredients(self):
-            """ Test creating a recipe with existing ingredients """
+    def test_creating_dataset_with_existing_ingredients(self):
+            """ Test creating a dataset with existing ingredients """
             ingredient = Ingredient.objects.create(user = self.user, name = 'Lemon')
             payload = {
                 'title':'Vietnamese Soup',
@@ -337,13 +337,13 @@ class PrivateRecipeAPITest(TestCase):
 
             res =  self.client.post(RECIPES_URL, payload, format='json')
             self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-            recipes = Recipe.objects.filter(user=self.user)
-            self.assertEqual(recipes.count(),1)
-            recipe = recipes[0]
-            self.assertEqual(recipe.ingredients.count(), 2)
-            self.assertIn(ingredient, recipe.ingredients.all())
+            datasets = Dataset.objects.filter(user=self.user)
+            self.assertEqual(datasets.count(),1)
+            dataset = datasets[0]
+            self.assertEqual(dataset.ingredients.count(), 2)
+            self.assertIn(ingredient, dataset.ingredients.all())
             for ingredient in payload['ingredients']:
-                exists = recipe.ingredients.filter(
+                exists = dataset.ingredients.filter(
                     name = ingredient['name'],
                     user = self.user,
                 ).exists()
@@ -351,8 +351,8 @@ class PrivateRecipeAPITest(TestCase):
 
 
     def test_create_ingredient_on_update(self):
-        """ Test creating ingredient when updating a recipe """
-        recipe = create_recipe(user=self.user)
+        """ Test creating ingredient when updating a dataset """
+        dataset = create_dataset(user=self.user)
 
         payload = {
             'ingredients':[
@@ -362,19 +362,19 @@ class PrivateRecipeAPITest(TestCase):
             ]
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         new_ingredient = Ingredient.objects.get(user = self.user, name = 'Limes')
-        self.assertIn(new_ingredient, recipe.ingredients.all())
+        self.assertIn(new_ingredient, dataset.ingredients.all())
 
 
-    def test_update_recipe_assign_ingredient(self):
-        """ Test assigning an existing ingredient when updating a recipe """
+    def test_update_dataset_assign_ingredient(self):
+        """ Test assigning an existing ingredient when updating a dataset """
         ingredient1 = Ingredient.objects.create(user = self.user, name='Pepper')
-        recipe = create_recipe(user = self.user)
-        recipe.ingredients.add(ingredient1)
+        dataset = create_dataset(user = self.user)
+        dataset.ingredients.add(ingredient1)
 
         ingredient2 = Ingredient.objects.create(user = self.user, name='Chili')
 
@@ -386,66 +386,66 @@ class PrivateRecipeAPITest(TestCase):
             ]
         }
 
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')    
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        self.assertIn(ingredient2, recipe.ingredients.all())
-        self.assertNotIn(ingredient1, recipe.ingredients.all())
+        self.assertIn(ingredient2, dataset.ingredients.all())
+        self.assertNotIn(ingredient1, dataset.ingredients.all())
 
-    def test_clear_recipe_ingredients(self):
-        """ Test clearing a recipe ingredient """
+    def test_clear_dataset_ingredients(self):
+        """ Test clearing a dataset ingredient """
         ingredient = Ingredient.objects.create(user = self.user, name = 'Garlic')
-        recipe = create_recipe(user = self.user)
-        recipe.ingredients.add(ingredient)
+        dataset = create_dataset(user = self.user)
+        dataset.ingredients.add(ingredient)
 
         payload = {'ingredients':[]}
-        url = detail_url(recipe.id)
+        url = detail_url(dataset.id)
         res = self.client.patch(url, payload, format='json')
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(recipe.ingredients.count(), 0)
+        self.assertEqual(dataset.ingredients.count(), 0)
 
 
     def test_filter_by_tags(self):
-        """ Test filtering recipes by tags """
-        r1 = create_recipe(user=self.user, title = "Thai Vegetable Curry")
-        r2 = create_recipe(user=self.user, title = "Aubergine  with Tahini")
+        """ Test filtering datasets by tags """
+        r1 = create_dataset(user=self.user, title = "Thai Vegetable Curry")
+        r2 = create_dataset(user=self.user, title = "Aubergine  with Tahini")
         tag1 = Tag.objects.create(user = self.user, name = 'Vegan')
         tag2 = Tag.objects.create(user = self.user, name = 'Vegeterian')
         r1.tags.add(tag1)
         r2.tags.add(tag2)
 
-        r3 = create_recipe(user=self.user, title = "Fish and Chips")
+        r3 = create_dataset(user=self.user, title = "Fish and Chips")
 
         params = {'tags': f'{tag1.id},{tag2.id}'}
         res = self.client.get(RECIPES_URL, params)
 
-        s1 = RecipeSerializer(r1)
-        s2 = RecipeSerializer(r2)
-        s3 = RecipeSerializer(r3)
+        s1 = DatasetSerializer(r1)
+        s2 = DatasetSerializer(r2)
+        s3 = DatasetSerializer(r3)
 
         self.assertIn(s1.data, res.data)
         self.assertIn(s2.data, res.data)
         self.assertNotIn(s3.data, res.data)
 
     def test_filter_by_ingredients(self):
-        """ Test filtering recipes by ingredients """
-        r1 = create_recipe(user=self.user, title = "Posh beans on toast")
-        r2 = create_recipe(user=self.user, title = "Chicken Cacciatore")
+        """ Test filtering datasets by ingredients """
+        r1 = create_dataset(user=self.user, title = "Posh beans on toast")
+        r2 = create_dataset(user=self.user, title = "Chicken Cacciatore")
         in1 = Ingredient.objects.create(user = self.user, name = 'Feta Chease')
         in2 = Ingredient.objects.create(user = self.user, name = 'Chicken')
         r1.ingredients.add(in1)
         r2.ingredients.add(in2)
 
-        r3 = create_recipe(user=self.user, title = "Red Lentil")
+        r3 = create_dataset(user=self.user, title = "Red Lentil")
 
         params = {'ingredients': f'{in1.id},{in2.id}'}
         res = self.client.get(RECIPES_URL, params)
 
-        s1 = RecipeSerializer(r1)
-        s2 = RecipeSerializer(r2)
-        s3 = RecipeSerializer(r3)
+        s1 = DatasetSerializer(r1)
+        s2 = DatasetSerializer(r2)
+        s3 = DatasetSerializer(r3)
 
         self.assertIn(s1.data, res.data)
         self.assertIn(s2.data, res.data)
@@ -462,14 +462,14 @@ class ImageUploadTest(TestCase):
         )
 
         self.client.force_authenticate(self.user)
-        self.recipe = create_recipe(user = self.user)
+        self.dataset = create_dataset(user = self.user)
 
     def tearDown(self):
-        self.recipe.image.delete() 
+        self.dataset.image.delete() 
 
     def test_upload_image(self):
-        """ Test uploading an image to a recipe """
-        url = image_upload_url(self.recipe.id)
+        """ Test uploading an image to a dataset """
+        url = image_upload_url(self.dataset.id)
         with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
             img = Image.new('RGB',(10,10))
             img.save(image_file, format='JPEG')
@@ -477,14 +477,14 @@ class ImageUploadTest(TestCase):
             payload = {'image':image_file}
             res = self.client.post(url, payload, format='multipart')
 
-        self.recipe.refresh_from_db()
+        self.dataset.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn('image', res.data)
-        self.assertTrue(os.path.exists(self.recipe.image.path))
+        self.assertTrue(os.path.exists(self.dataset.image.path))
 
     def test_upload_image_bad_request(self):
         """ Test uploading invalid image """
-        url = image_upload_url(self.recipe.id)
+        url = image_upload_url(self.dataset.id)
         payload = {'image':'notanimage'}
         res = self.client.post(url, payload, format='multipart')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

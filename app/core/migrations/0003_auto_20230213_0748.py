@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_recipe'),
+        ('core', '0002_dataset'),
     ]
 
     operations = [
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
-            model_name='recipe',
+            model_name='dataset',
             name='tags',
             field=models.ManyToManyField(to='core.Tag'),
         ),

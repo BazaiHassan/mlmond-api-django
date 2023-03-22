@@ -14,12 +14,12 @@ from django.contrib.auth.models import (
 
 from django.conf import settings
 
-def recipe_image_file_path(instance, filename):
-    """ Generate file path for new recipe image """
+def dataset_image_file_path(instance, filename):
+    """ Generate file path for new dataset image """
     ext = os.path.splitext(filename)[1]
     filename = f'{uuid.uuid4()}{ext}'
 
-    return os.path.join('uploads','recipe', filename)
+    return os.path.join('uploads','dataset', filename)
 
 class UserManager(BaseUserManager):
     """ Manager for users """
@@ -55,8 +55,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
 
-class Recipe(models.Model):
-    """ Recipe object """
+class Dataset(models.Model):
+    """ Dataset object """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -65,14 +65,14 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     tags = models.ManyToManyField('Tag')
     ingredients = models.ManyToManyField('Ingredient')
-    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
+    image = models.ImageField(null=True, upload_to=dataset_image_file_path)
 
     def __str__(self):
         return self.title
 
 
 class Tag(models.Model):
-    """ Tag for filtering recipes """
+    """ Tag for filtering datasets """
     name = models.CharField(max_length=255)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
@@ -80,7 +80,7 @@ class Tag(models.Model):
         return self.name
 
 class Ingredient(models.Model):
-    """ Ingredient for recipe """
+    """ Ingredient for dataset """
     name = models.CharField(max_length=255)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 

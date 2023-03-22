@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
-            model_name='recipe',
+            model_name='dataset',
             name='ingredients',
             field=models.ManyToManyField(to='core.Ingredient'),
         ),

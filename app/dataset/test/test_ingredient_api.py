@@ -9,16 +9,16 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient, Recipe
+from core.models import Ingredient, Dataset
 
-from recipe.serializers import IngredientSerializer
+from dataset.serializers import IngredientSerializer
 
 
-INGREDIENT_URL = reverse('recipe:ingredient-list')
+INGREDIENT_URL = reverse('dataset:ingredient-list')
 
 def detail_url(ingredient_id):
     """ Create and Return an ingredient detail URL """
-    return reverse('recipe:ingredient-detail', args=[ingredient_id])
+    return reverse('dataset:ingredient-detail', args=[ingredient_id])
 
 def create_user(email='user@example.com', password='testpass123'):
     """ Create and return a new user """
@@ -90,19 +90,19 @@ class PrivateIngredientsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Ingredient.objects.filter(id=ingredient.id).exists())
 
-    def filter_ingredient_assigned_to_recipe(self):
-        """ Test liting ingredients by those assigned to recipe """
+    def filter_ingredient_assigned_to_dataset(self):
+        """ Test liting ingredients by those assigned to dataset """
         in1 = Ingredient.objects.create(user = self.user, name='Apples')
         in2 = Ingredient.objects.create(user = self.user, name='Turkey')
 
-        recipe = Recipe.objects.create(
+        dataset = Dataset.objects.create(
             title='Apple Crumble',
             time_minutes=5,
             price=Decimal('4.50'),
             user=self.user
         )
 
-        recipe.ingredients.add(in1)
+        dataset.ingredients.add(in1)
 
         res = self.client.get(INGREDIENT_URL, {'assigned_only':1})
 
@@ -116,22 +116,22 @@ class PrivateIngredientsApiTests(TestCase):
         """ Test filtered ingredients returns a unique list """
         ing = Ingredient.objects.create(user = self.user, name = 'Eggs')
         Ingredient.objects.create(user = self.user, name = 'Lentils')
-        recipe1 = Recipe.objects.create(
+        dataset1 = Dataset.objects.create(
             title = 'Herb Eggs',
             time_minutes = 60,
             price = Decimal('7.00'),
             user = self.user,
         )
 
-        recipe2 = Recipe.objects.create(
+        dataset2 = Dataset.objects.create(
             title = 'Eggs Benedict',
             time_minutes = 20,
             price = Decimal('5.00'),
             user = self.user,
         )
 
-        recipe1.ingredients.add(ing)
-        recipe2.ingredients.add(ing)
+        dataset1.ingredients.add(ing)
+        dataset2.ingredients.add(ing)
 
         res = self.client.get(INGREDIENT_URL, {'assigned_only':1})
         self.assertEqual(len(res.data), 1)

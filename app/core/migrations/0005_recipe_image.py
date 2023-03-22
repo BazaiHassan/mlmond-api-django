@@ -12,8 +12,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='recipe',
+            model_name='dataset',
             name='image',
-            field=models.ImageField(null=True, upload_to=core.models.recipe_image_file_path),
+            field=models.ImageField(null=True, upload_to=core.models.dataset_image_file_path),
         ),
     ]
